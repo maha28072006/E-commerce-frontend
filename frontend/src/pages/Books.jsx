@@ -1,12 +1,13 @@
+
 import { useEffect, useState } from "react";
 import axios from "axios";
+
 import { Link } from "react-router-dom";
-import SearchBar from "../components/SearchBar";
+import SearchBar from "./SearchBar";
 import "./Books.css";
 
-// Backend API URL
+// Backend API URL (from .env)
 const API_URL = `${import.meta.env.VITE_API_URL}/api/books`;
-
 
 function Books({ addToCart }) {
   const [books, setBooks] = useState([]);
@@ -19,13 +20,9 @@ function Books({ addToCart }) {
       try {
         const response = await axios.get(API_URL);
 
-        // ✅ SAFELY extract array from backend response
-        const booksArray = Array.isArray(response.data)
-          ? response.data
-          : response.data.data || [];
-
-        setBooks(booksArray);
-        setFilteredBooks(booksArray);
+        // Backend returns an array of books
+        setBooks(response.data);
+        setFilteredBooks(response.data);
       } catch (error) {
         console.error("Error fetching books:", error);
       } finally {
@@ -34,7 +31,7 @@ function Books({ addToCart }) {
     };
 
     fetchBooks();
-  }, []);
+  }, [API_URL]);
 
   // Search functionality
   const handleSearch = (searchTerm) => {
@@ -64,28 +61,29 @@ function Books({ addToCart }) {
 
       {/* Books Grid */}
       <div className="books-grid">
-        {filteredBooks.length > 0 ? (
-          filteredBooks.map((book) => (
-            <div key={book._id} className="book-card">
-              <Link to={`/book/${book._id}`}>
-                <img src={book.image} alt={book.title} />
-                <h4>{book.title}</h4>
-              </Link>
+        {filteredBooks.map((book) => (
+          <div key={book._id} className="book-card">
+            <Link to={`/book/${book._id}`}>
+              <img src={book.image} alt={book.title} />
+              <h4>{book.title}</h4>
+            </Link>
 
-              <p className="author">by {book.author}</p>
-              <p className="price">₹{book.price}</p>
+            <p className="author">by {book.author}</p>
+            <p className="price">₹{book.price}</p>
 
-              <button onClick={() => addToCart(book)}>
-                Add to Cart
-              </button>
-            </div>
-          ))
-        ) : (
-          <div className="no-results">
-            <p>No books found.</p>
+            <button onClick={() => addToCart(book)}>
+              Add to Cart
+            </button>
           </div>
-        )}
+        ))}
       </div>
+
+      {/* No Results */}
+      {filteredBooks.length === 0 && (
+        <div className="no-results">
+          <p>No books found matching your search.</p>
+        </div>
+      )}
     </div>
   );
 }
